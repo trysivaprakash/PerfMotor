@@ -1,0 +1,41 @@
+group = 'com.myorg.perf-motor'
+version = '1.0.0'
+description = """PERF MOTOR"""
+
+apply plugin: 'java'
+apply plugin: 'scala'
+apply plugin: 'application' // added
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+mainClassName = 'perfmotor.Launcher'
+
+jar {
+    from { (configurations.runtime).collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+}
+
+dependencies {
+
+    compile 'org.scala-lang:scala-library:2.11.8'
+    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.4.2.RELEASE')
+    compile(group: 'io.springfox', name: 'springfox-swagger2', version: '2.6.1')
+    compile(group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.6.1')
+    compile(group: 'io.gatling', name: 'gatling-core', version: '2.3.0')
+    compile(group: 'io.gatling', name: 'gatling-app', version: '2.3.0')
+    compile(group: 'commons-io', name: 'commons-io', version: '2.6')
+    compile(group: 'io.gatling.highcharts', name: 'gatling-charts-highcharts', version: '2.3.0')
+    compile(group: 'io.gatling', name: 'gatling-app', version: '2.3.0')
+    compile(group: 'org.json', name: 'json', version: '20160807')
+
+    // Use Scalatest for testing our library
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.scalatest:scalatest_2.11:3.0.1'
+
+    // Need scala-xml at test runtime
+    testRuntime 'org.scala-lang.modules:scala-xml_2.11:1.0.6'
+}

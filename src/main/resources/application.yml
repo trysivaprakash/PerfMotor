@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: sample-spring-boot
+  mvc:
+    view:
+      prefix: /
+      suffix: .html
+  resources:
+    add-mappings: true
+
+server:
+  port: 8082
+
