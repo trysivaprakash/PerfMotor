@@ -19,6 +19,16 @@ jar {
     }
 }
 
+configurations.all {
+    exclude group: 'org.springframework.boot', module: 'spring-boot-starter-aop'
+    exclude group: 'org.springframework.boot', module: 'spring-boot-starter-jdbc'
+    exclude group: 'org.springframework', module: 'spring-aspects'
+    exclude group: 'org.apache.tomcat', module: 'tomcat-jdbc'
+    exclude group: 'org.mapstruct', module: 'mapstruct'
+    exclude group: 'javax.activation', module: 'activation'
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+}
+
 dependencies {
 
     compile 'org.scala-lang:scala-library:2.11.8'

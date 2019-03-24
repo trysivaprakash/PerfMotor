@@ -2,24 +2,18 @@ package perfmotor.controller;
 
 import io.gatling.app.Gatling;
 import io.gatling.core.config.GatlingPropertiesBuilder;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import org.apache.commons.io.FileUtils;
-import org.json.JSONObject;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import perfmotor.beans.PerfMotorExecVars;
-import perfmotor.beans.ServiceDetails;
+import perfmotor.beans.TestingDetails;
 import perfmotor.gatling.PerfMotorEnvHolder;
-import perfmotor.util.Assister;
 import perfmotor.util.PerfMotorException;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,230 +23,124 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
+@ApiIgnore
 @Controller
 public class PerfMotorRouter {
 
-    private final String reportPath = System.getProperty("user.dir") + "/src/main/webapp/resources";
-    //private final String simulationClass = "com.myorg.perfmotor.perfmotor.gatling.PerfMotorSimulation";
-    private final String dataDirectory = System.getProperty("user.dir") + "/src/main/webapp/data";
+    private static final Logger LOGGER = LoggerFactory.getLogger(PerfMotorRouter.class);
 
+    private final String reportPath = System.getProperty("user.dir") + "/src/main/webapp/resources";
+    private final String dataDirectory = System.getProperty("user.dir") + "/src/main/webapp/data";
+    private final String simulationClass = "perfmotor.gatling.PerfMotorSimulation";
+
+    /**
+     * Sample method to test
+     *
+     * @return
+     */
     @RequestMapping(method = RequestMethod.GET, path = "/cars")
-    @ApiOperation(value = "Just a GET",
-            notes = "To return the message", response = String.class, httpMethod = "GET")
-    @ApiResponses(value = {
-            @ApiResponse(code = 422, message = "Unprocessable Entity (Invalid request content)."),
-            @ApiResponse(code = 500, message = "Internal server error")
-    })
     public String justAGet() {
         System.out.println("Mustang, Fusion, GT ... etc");
         return "Mustang, Fusion, GT ... etc";
     }
 
     @RequestMapping(value = "/pm", method = RequestMethod.GET)
-    public String home(Map<String, Object> model) {
-        model.put("message", "HowToDoInJava Reader !!");
+    public String home() {
         return "perf-motor";
     }
 
-    @ApiOperation(value = "This is POST",
-            notes = "To return the message", response = String.class, httpMethod = "POST")
-    @ApiResponses(value = {
-            @ApiResponse(code = 422, message = "Unprocessable Entity (Invalid request content)."),
-            @ApiResponse(code = 500, message = "Internal server error")
-    })
     @RequestMapping(value = "/runPerfMotor", method = RequestMethod.POST)
     @ResponseBody
-    public synchronized String runPerformanceTest(@RequestBody String message,
-                                                  HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws PerfMotorException {
+    public synchronized String runPerformanceTest(@RequestBody TestingDetails testingDetails, HttpServletRequest httpServletRequest,
+                                                  HttpServletResponse httpServletResponse) throws PerfMotorException {
+        LOGGER.info("Requested Http Method: " + testingDetails.getMethod());
+        LOGGER.info("Requested Http URL : " + testingDetails.getUrl());
 
-        try {
-            FileUtils.deleteDirectory(new File(reportPath));
-        } catch (IOException e) {
-            throw new PerfMotorException("Exception while deleting existing report file", e);
-        }
+        preActions();
+        convertDetailsForScala(testingDetails);
+        executeRun();
+        return getPerfTestReportPath();
+    }
 
-        System.out.println(">>>>>>> received message : " + message);
-
-        JSONObject jsonMessage = new JSONObject(message);
-
-        System.out.println("httpMethod from the jsonObject : " + jsonMessage.getString("method"));
-        System.out.println("url from the jsonObject : " + jsonMessage.getString("url"));
-        System.out.println("nbrOfReq from the jsonObject : " + jsonMessage.getString("nbrOfReq"));
-        System.out.println("nbrOfLoops from the jsonObject : " + jsonMessage.getString("nbrOfLoops"));
-
-        //System.out.println("bodyPart from the jsonObject : "+jsonMessage.getString("body"));
-        //System.out.println("fileContent from the jsonObject : "+jsonMessage.getBoolean("fileContent"));
-
-
-        //System.out.println("fileContent from the jsonObject : "+jsonMessage.getBoolean("fileContent"));
-
-
-        String baseUrl = "http://localhost:8082/ford/cars";
-        String endPointUrl = jsonMessage.getString("url");
-        String httpMethod = jsonMessage.getString("method");
-        int loopCount = Integer.parseInt(jsonMessage.getString("nbrOfLoops"));
-        int requestNumber = Integer.parseInt(jsonMessage.getString("nbrOfReq"));
-        String contentType = "application/json";
-        String feederDataFileName = dataDirectory + "/dataNew.csv";
-        //String jsonBody = "{\"content\":\"${carName}\"}";  // to test passing a reference in the json body
-        String jsonBody = null;
-        try {
-            jsonBody = jsonMessage.getString("body");
-            System.out.println("nbrOfLoops from the jsonObject : " + jsonBody);
-        } catch (Exception exception) {
-
-        }
-
-        try {
-            System.out.println(">>>>>>>>> decoded url : " + URLDecoder.decode(endPointUrl, StandardCharsets.UTF_8.toString()));
-        } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
-            System.out.println(">>>>>>>>> decoded url faild ");
-            //e.printStackTrace();
-        }
-
-        PerfMotorExecVars perfMotorExecVars = new PerfMotorExecVars();
-
-        if (jsonMessage.get("fileContent") instanceof String) {
-            writeDataToFile(jsonMessage);
-            PerfMotorEnvHolder.dataDirectory_$eq(feederDataFileName);
-        } else {
-            PerfMotorEnvHolder.dataDirectory_$eq("defaultDataPath.csv");
-        }
-
-
-        String simulationClass = "perfmotor.gatling.PerfMotorSimulation";
-        GatlingPropertiesBuilder props = new GatlingPropertiesBuilder();
-        props.simulationClass(simulationClass);
-        props.resultsDirectory(reportPath);
-        props.dataDirectory(dataDirectory);
-
-        System.out.println(">>>>>>dat dir " + dataDirectory);
-
-
-        //PerfMotorExecVars perfMotorExecVars = new PerfMotorExecVars();
-        perfMotorExecVars.setBaseUrl(baseUrl);
-        perfMotorExecVars.setMaxRespTime(50);
-        perfMotorExecVars.setRequestName("Sample Request Name");
-        perfMotorExecVars.setScenarioName("Sample Scenario Name");
-
-        try {
-            PerfMotorEnvHolder.baseUrl_$eq(URLDecoder.decode(endPointUrl, StandardCharsets.UTF_8.toString()));
-        } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        PerfMotorEnvHolder.maxRespTime_$eq(500);
-        PerfMotorEnvHolder.requestName_$eq("Sample_req");
-        PerfMotorEnvHolder.scenarioName_$eq("sample scen");
-        PerfMotorEnvHolder.loopCount_$eq(loopCount);
-        PerfMotorEnvHolder.rampUp_$eq(requestNumber);
-        PerfMotorEnvHolder.token_$eq("beare " + httpServletRequest.getHeader("Authorization"));
-//      PerfMotorEnvHolder.dataDirectory_$eq(feederDataFileName);
-        PerfMotorEnvHolder.httpMethod_$eq(httpMethod);
-        PerfMotorEnvHolder.test_$eq(jsonBody);
-
-
-        executeRun(props);
-        perfMotorExecVars = null;
-
-
-        File file = new File(System.getProperty("user.dir") + "/src/main/webapp/resources");
+    /**
+     * Scan and get gatling generated report path html.
+     *
+     * @return String - Generated report path.
+     */
+    private String getPerfTestReportPath() {
+        File file = new File(reportPath);
         String[] listOfSubfolders = file.list();
         String actualReportFolder = listOfSubfolders[0];
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>... Actual report folder name: " + actualReportFolder);
-
-
         return "resources/" + actualReportFolder + "/index.html";
     }
 
-
-    @RequestMapping(method = RequestMethod.GET, value = "/perfMotor")
-    public String loadServiceDetails(HttpServletRequest request) {
-        StringBuilder url = getUrl(request);
+    /**
+     * Assign given testing details into scala environment to do the execution.
+     *
+     * @param testingDetails Given testing details
+     * @throws PerfMotorException
+     */
+    private void convertDetailsForScala(@RequestBody TestingDetails testingDetails) throws PerfMotorException {
         try {
-            ClassPathScanningCandidateComponentProvider scanner =
-                    new ClassPathScanningCandidateComponentProvider(true);
-            scanner.addIncludeFilter(
-                    new AnnotationTypeFilter(Controller.class));
-
-            Class<?> clazz = null;
-            ServiceDetails serviceDetails;
-            for (BeanDefinition bd : scanner.findCandidateComponents("com.myorg.samplespringboot")) {
-                serviceDetails = new ServiceDetails();
-                try {
-                    clazz = Class.forName(bd.getBeanClassName());
-                    String basePath = Assister.getBasePath(clazz);
-                    if (null != basePath) {
-                        serviceDetails.setBasePath(basePath);
-                        Assister.getEndPointDetails(clazz);
-                    }
-                } catch (ClassNotFoundException e) {
-                    throw new PerfMotorException("Exception in finding base path", e);
-                }
-            }
-        } catch (PerfMotorException e) {
-            //TODO implement
+            PerfMotorEnvHolder.baseUrl_$eq(URLDecoder.decode(testingDetails.getUrl(), StandardCharsets.UTF_8.toString()));
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("Exception while decoding given url", e);
+            throw new PerfMotorException("Exception while decoding given url", e);
         }
-        return "perf-motor";
+        PerfMotorEnvHolder.httpMethod_$eq(testingDetails.getMethod());
+        PerfMotorEnvHolder.loopCount_$eq(testingDetails.getNbrOfLoops());
+        PerfMotorEnvHolder.rampUp_$eq(testingDetails.getNbrOfReq());
+        PerfMotorEnvHolder.test_$eq(testingDetails.getBody());
+
+        if (null != testingDetails.getFileContent()
+                && !testingDetails.getFileContent().equalsIgnoreCase("false")) {
+            PerfMotorEnvHolder.dataDirectory_$eq(writeDataToFile(testingDetails.getFileContent()));
+        } else {
+            PerfMotorEnvHolder.dataDirectory_$eq("");
+        }
+        PerfMotorEnvHolder.maxRespTime_$eq(500);
+        PerfMotorEnvHolder.requestName_$eq("For given request");
+        PerfMotorEnvHolder.scenarioName_$eq("For given scenario");
+        if (null != testingDetails.getHeaders().getAuthorization()) {
+            PerfMotorEnvHolder.token_$eq(testingDetails.getHeaders().getAuthorization());
+        } else {
+            PerfMotorEnvHolder.token_$eq("");
+        }
     }
 
-    /*@RequestMapping(value = "/runPerformanceTest", method = RequestMethod.GET)
-    //@ResponseBody
-    public String runPerformanceTest(HttpServletRequest httpServletRequest) throws PerfMotorException {
-    	
-        //String baseUrl = "http://localhost:8080/students/${USER_ID}";
-        //String baseUrl = "http://localhost:8082/ford/cars/colors/${carName}";
-    	String baseUrl = "http://localhost:8082/ford/cars";
-        String httpMethod = "POST";
-        String contentType = "application/json";
-        String feederDataFileName = "placeHoldeFeeder.csv";
-        //String jsonBody = "{\"content\":\"John\"}";  // to test with plian json body only
-        String jsonBody = "{\"content\":\"${carName}\"}";  // to test passing a reference in the json body
+    /**
+     * Do preliminary actions before executing a run.
+     *
+     * @throws PerfMotorException
+     */
+    private void preActions() throws PerfMotorException {
+        try {
+            FileUtils.deleteDirectory(new File(reportPath));
+        } catch (IOException e) {
+            LOGGER.error("Exception while deleting existing report file", e);
+            throw new PerfMotorException("Exception while deleting existing report file", e);
+        }
+    }
 
-        String simulationClass = "com.myorg.perfmotor.perfmotor.gatling.PerfMotorSimulation";
+    /**
+     * Execute scala-gatling
+     */
+    private void executeRun() {
         GatlingPropertiesBuilder props = new GatlingPropertiesBuilder();
         props.simulationClass(simulationClass);
         props.resultsDirectory(reportPath);
         props.dataDirectory(dataDirectory);
-        //props.outputDirectoryBaseName("hello");
-        
-        System.out.println(">>>>>>dat dir "+dataDirectory);
-        
 
-        PerfMotorExecVars perfMotorExecVars = new PerfMotorExecVars();
-        perfMotorExecVars.setBaseUrl(baseUrl);
-        perfMotorExecVars.setMaxRespTime(50);
-        perfMotorExecVars.setRequestName("Sample Request Name");
-        perfMotorExecVars.setScenarioName("Sample Scenario Name");
+        Gatling.fromMap(props.build());
+    }
 
-        PerfMotorEnvHolder.baseUrl_$eq(baseUrl);
-        PerfMotorEnvHolder.maxRespTime_$eq(500);
-        PerfMotorEnvHolder.requestName_$eq("Sample_req");
-        PerfMotorEnvHolder.scenarioName_$eq("sample scen");
-        PerfMotorEnvHolder.loopCount_$eq(2);
-        PerfMotorEnvHolder.rampUp_$eq(10);
-        PerfMotorEnvHolder.token_$eq("beare "+httpServletRequest.getHeader("Authorization"));
-        PerfMotorEnvHolder.dataDirectory_$eq(feederDataFileName);
-        PerfMotorEnvHolder.httpMethod_$eq(httpMethod);
-        PerfMotorEnvHolder.test_$eq(jsonBody);
-
-
-        executeRun(props);
-        perfMotorExecVars = null;
-        
-        
-        File file = new File(System.getProperty("user.dir") + "/src/main/webapp/resources");
-        String[] listOfSubfolders = file.list();
-        String actualReportFolder = listOfSubfolders[0];
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>... Actual report folder name: "+actualReportFolder);
-
-        
-        return  actualReportFolder + "/index";
-  }*/
-
+    /**
+     * To identify the given host and port.
+     *
+     * @param request HttpServletRequest
+     * @return StringBuilder - Host Details
+     */
     private StringBuilder getUrl(HttpServletRequest request) {
         StringBuilder url = new StringBuilder()
                 .append(request.getScheme())
@@ -264,45 +152,34 @@ public class PerfMotorRouter {
         return url;
     }
 
-    private void executeRun(GatlingPropertiesBuilder props) throws PerfMotorException {
-
-        //      FileUtils.deleteDirectory(new File(reportPath));
-        Gatling.fromMap(props.build());
-        props = null;
-    }
-
-    private void clearFileDirectory(String filePath) {
-        try {
-            FileUtils.deleteDirectory(new File(filePath + "/data"));
-            System.out.println(">>>>>>> data directory cleared");
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    private void writeDataToFile(JSONObject feederData) {
-
+    /**
+     * Write the given file content into local for Gatling to read.
+     *
+     * @param feederData Given file content.
+     * @return String - Path where file content written in file.
+     * @throws PerfMotorException
+     */
+    private String writeDataToFile(String feederData) throws PerfMotorException {
+        String fileAbsPath = dataDirectory + "/dataNew.csv";
         FileWriter writer = null;
         try {
-            writer = new FileWriter(dataDirectory + "/dataNew.csv", false);
-            writer.append(feederData.getString("fileContent"));
+            writer = new FileWriter(fileAbsPath, false);
+            writer.append(feederData);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.error("Unable to write feederData", e);
+            throw new PerfMotorException("Unable to write feederData", e);
         } finally {
             if (null != writer) {
                 try {
-                    System.out.println(">>>>>>>>>>>>>>> flushing the writer");
                     writer.flush();
                     writer.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOGGER.error("Unable to flush feederData", e);
+                    throw new PerfMotorException("Unable to flush feederData", e);
                 }
             }
 
         }
+        return fileAbsPath;
     }
-
 }

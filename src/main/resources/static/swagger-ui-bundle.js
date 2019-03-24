@@ -8320,6 +8320,9 @@
         var x = n.buildRequest(xx);
         var temp1 = n.buildRequest(xx); 
 		
+		var headers = new Headers();
+		headers.append('Content-Type', 'application/json');
+		
 		temp1.nbrOfReq = document.getElementById("nbrOfReq").value;	
 		temp1.nbrOfLoops = document.getElementById("nbrOfLoops").value;
 		temp1.fileContent = fileContent;
@@ -8327,10 +8330,12 @@
 		x.url = "/runPerfMotor";
 		x.body = temp1;
 		x.method = "POST";
+		x.headers = headers;
 			
 		e.pathName = "/runPerfMotor";
 		e.method = "POST";
 		e.body = temp1;
+		e.headers = headers;
 		
 		r.setRequest(e.pathName, e.method, x);
         
@@ -8346,11 +8351,14 @@
 			o.url = "/runPerfMotor";
 			o.body = temp2;
 			o.method = "POST";
+			o.headers = headers;
+			
 			
 			n.url = "/runPerfMotor";
 			n.body = JSON.stringify(temp2);
 			n.method = "POST";
-					
+			n.headers = headers;
+			
           return r.setMutatedRequest(e.pathName, e.method, o), n
         }, e.responseInterceptor = m;
         var S = Date.now();
