@@ -2,6 +2,12 @@ package perfmotor.controller;
 
 import io.gatling.app.Gatling;
 import io.gatling.core.config.GatlingPropertiesBuilder;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,15 +20,6 @@ import perfmotor.beans.TestingDetails;
 import perfmotor.gatling.PerfMotorEnvHolder;
 import perfmotor.util.PerfMotorException;
 import springfox.documentation.annotations.ApiIgnore;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 
 @ApiIgnore
 @Controller
@@ -52,8 +49,7 @@ public class PerfMotorRouter {
 
     @RequestMapping(value = "/runPerfMotor", method = RequestMethod.POST)
     @ResponseBody
-    public synchronized String runPerformanceTest(@RequestBody TestingDetails testingDetails, HttpServletRequest httpServletRequest,
-                                                  HttpServletResponse httpServletResponse) throws PerfMotorException {
+    public synchronized String runPerformanceTest(@RequestBody TestingDetails testingDetails) throws PerfMotorException {
         LOGGER.info("Requested Http Method: " + testingDetails.getMethod());
         LOGGER.info("Requested Http URL : " + testingDetails.getUrl());
 
@@ -158,23 +154,6 @@ public class PerfMotorRouter {
         props.dataDirectory(dataDirectory);
 
         Gatling.fromMap(props.build());
-    }
-
-    /**
-     * To identify the given host and port.
-     *
-     * @param request HttpServletRequest
-     * @return StringBuilder - Host Details
-     */
-    private StringBuilder getUrl(HttpServletRequest request) {
-        StringBuilder url = new StringBuilder()
-                .append(request.getScheme())
-                .append("://")
-                .append(request.getServerName());
-        if (-1 != request.getServerPort()) {
-            url.append(":").append(request.getServerPort());
-        }
-        return url;
     }
 
     /**
