@@ -2,16 +2,21 @@ package perfmotor.gatling
 
 object PerfMotorEnvHolder {
   var baseUrl = ""
-  var maxRespTime = 0
   var scenarioName = ""
   var requestName = ""
-  
-  var token = ""
-  var loopCount = 20
-  var rampUp = 100
   var httpMethod = ""
-  var dataDirectory = "defaultEmptyData.csv"
-  var test = ""
-  var jsonBody = ""
-  var rampUserOver = "5";
+  var dataDirectory = ""
+  var token = ""
+  var body = ""
+
+  var expectedMaxResponseTime = 0
+  var expectedStatus = 0
+  var atOnceUsers = 0
+  var rampUsers = 0
+  var rampUsersOver = ""
+  var constantUsersPerSec = 0
+  var constantUsersPerSecDuring = ""
+  var rampUsersPerSecRate1 = 0
+  var rampUsersPerSecRate2 = 0
+  var rampUsersPerSecDuring = ""
 }

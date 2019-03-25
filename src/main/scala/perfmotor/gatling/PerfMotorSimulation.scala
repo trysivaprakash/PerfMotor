@@ -7,24 +7,22 @@ import scala.concurrent.duration._
 
 class PerfMotorSimulation extends Simulation {
   val httpConf = http(configuration).baseURL(PerfMotorEnvHolder.baseUrl).disableWarmUp
-  val maxRespTime = PerfMotorEnvHolder.maxRespTime
   var feederFileGiven = false
-  var jsonBOdyFlag = true
 
   val header = Map(
-  "Authorization" -> PerfMotorEnvHolder.token
+    "Authorization" -> PerfMotorEnvHolder.token
   )
 
   if (PerfMotorEnvHolder.dataDirectory.equals("")) {
     feederFileGiven = false;
   } else {
     try {
-      println("Checking feeder file on path : "+PerfMotorEnvHolder.dataDirectory)
+      println("Checking feeder file on path : " + PerfMotorEnvHolder.dataDirectory)
       csv(PerfMotorEnvHolder.dataDirectory).circular
       feederFileGiven = true;
     }
     catch {
-      case exception : Exception => {
+      case exception: Exception => {
         feederFileGiven = false;
         println("Exception occurred while reading feeder file", exception)
       }
@@ -33,59 +31,62 @@ class PerfMotorSimulation extends Simulation {
 
   var perfMotorScenario = scenario("");
 
-  if((!feederFileGiven) && ("GET".equals(PerfMotorEnvHolder.httpMethod))) {
+  if ((!feederFileGiven) && ("GET".equals(PerfMotorEnvHolder.httpMethod))) {
     perfMotorScenario = scenario(PerfMotorEnvHolder.scenarioName)
       .exec(http(PerfMotorEnvHolder.requestName)
-            .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
-            .headers(header)
-            .check(status.is(200)))
+        .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
+        .headers(header)
+        .check(status.is(PerfMotorEnvHolder.expectedStatus)).check(responseTimeInMillis lessThan PerfMotorEnvHolder.expectedMaxResponseTime))
       .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
   } else if ((feederFileGiven) && ("GET".equals(PerfMotorEnvHolder.httpMethod))) {
     perfMotorScenario = scenario(PerfMotorEnvHolder.scenarioName)
       .feed(csv(PerfMotorEnvHolder.dataDirectory).circular)
       .exec(http(PerfMotorEnvHolder.requestName)
-            .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
-            .headers(header)
-            .check(status.is(200)))
+        .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
+        .headers(header)
+        .check(status.is(PerfMotorEnvHolder.expectedStatus)).check(responseTimeInMillis lessThan PerfMotorEnvHolder.expectedMaxResponseTime))
       .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
   } else if (feederFileGiven && ((("PUT".equals(PerfMotorEnvHolder.httpMethod))) || ("POST".equals(PerfMotorEnvHolder.httpMethod)))) {
     perfMotorScenario = scenario(PerfMotorEnvHolder.scenarioName)
       .feed(csv(PerfMotorEnvHolder.dataDirectory).circular)
       .exec(http(PerfMotorEnvHolder.requestName)
-            .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
-            .headers(header)
-            .body(StringBody(PerfMotorEnvHolder.test)).asJSON
-            .check(status.is(200)))
+        .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
+        .headers(header)
+        .body(StringBody(PerfMotorEnvHolder.body)).asJSON
+        .check(status.is(PerfMotorEnvHolder.expectedStatus)).check(responseTimeInMillis lessThan PerfMotorEnvHolder.expectedMaxResponseTime))
       .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
   } else if ((!feederFileGiven) && (("PUT".equals(PerfMotorEnvHolder.httpMethod)) || ("POST".equals(PerfMotorEnvHolder.httpMethod)))) {
     perfMotorScenario = scenario(PerfMotorEnvHolder.scenarioName)
-    .exec(
-          http(PerfMotorEnvHolder.requestName)
-            .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
-            .headers(header)
-            .body(StringBody(PerfMotorEnvHolder.test)).asJSON
-            .check(status.is(200))).exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
-  }else if ((feederFileGiven) && ("DELETE".equals(PerfMotorEnvHolder.httpMethod))) {
+      .exec(
+        http(PerfMotorEnvHolder.requestName)
+          .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
+          .headers(header)
+          .body(StringBody(PerfMotorEnvHolder.body)).asJSON
+          .check(status.is(PerfMotorEnvHolder.expectedStatus)).check(responseTimeInMillis lessThan PerfMotorEnvHolder.expectedMaxResponseTime))
+      .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
+  } else if ((feederFileGiven) && ("DELETE".equals(PerfMotorEnvHolder.httpMethod))) {
     perfMotorScenario = scenario(PerfMotorEnvHolder.scenarioName)
       .feed(csv(PerfMotorEnvHolder.dataDirectory).circular)
-        .exec(http(PerfMotorEnvHolder.requestName)
-            .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
-            .headers(header)
-            .check(status.is(200)))
+      .exec(http(PerfMotorEnvHolder.requestName)
+        .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
+        .headers(header)
+        .check(status.is(PerfMotorEnvHolder.expectedStatus)).check(responseTimeInMillis lessThan PerfMotorEnvHolder.expectedMaxResponseTime))
       .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
-  }else if ((!feederFileGiven) && ("DELETE".equals(PerfMotorEnvHolder.httpMethod))) {
+  } else if ((!feederFileGiven) && ("DELETE".equals(PerfMotorEnvHolder.httpMethod))) {
     perfMotorScenario = scenario(PerfMotorEnvHolder.scenarioName)
-        .exec(http(PerfMotorEnvHolder.requestName)
-            .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
-            .headers(header)
-            .check(status.is(200)))
+      .exec(http(PerfMotorEnvHolder.requestName)
+        .httpRequest(PerfMotorEnvHolder.httpMethod, PerfMotorEnvHolder.baseUrl)
+        .headers(header)
+        .check(status.is(PerfMotorEnvHolder.expectedStatus)).check(responseTimeInMillis lessThan PerfMotorEnvHolder.expectedMaxResponseTime))
       .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
   }
 
   var perfMotorSimulation = List(perfMotorScenario.inject(
-      atOnceUsers(PerfMotorEnvHolder.rampUp),
-      constantUsersPerSec(PerfMotorEnvHolder.loopCount) during Duration.apply("1 seconds").asInstanceOf[FiniteDuration]
-    ))
+    atOnceUsers(PerfMotorEnvHolder.atOnceUsers),
+    rampUsers(PerfMotorEnvHolder.rampUsers) over Duration.apply(PerfMotorEnvHolder.rampUsersOver).asInstanceOf[FiniteDuration],
+    constantUsersPerSec(PerfMotorEnvHolder.constantUsersPerSec) during Duration.apply(PerfMotorEnvHolder.constantUsersPerSecDuring).asInstanceOf[FiniteDuration],
+    rampUsersPerSec(PerfMotorEnvHolder.rampUsersPerSecRate1) to (PerfMotorEnvHolder.rampUsersPerSecRate2) during Duration.apply(PerfMotorEnvHolder.rampUsersPerSecDuring).asInstanceOf[FiniteDuration]
+  ))
 
   setUp(perfMotorSimulation).protocols(httpConf);
 }

@@ -8323,8 +8323,16 @@
 		var headers = new Headers();
 		headers.append('Content-Type', 'application/json');
 		
-		temp1.nbrOfReq = document.getElementById("nbrOfReq").value;	
-		temp1.nbrOfLoops = document.getElementById("nbrOfLoops").value;
+		temp1.expectedMaxResponseTime = document.getElementById("expectedMaxResponseTime").value;	
+		temp1.expectedStatus = document.getElementById("expectedStatus").value;	
+		temp1.atOnceUsers = document.getElementById("atOnceUsers").value;	
+		temp1.rampUsers = document.getElementById("rampUsers").value;
+		temp1.rampUsersOver = document.getElementById("rampUsersOver").value;
+		temp1.constantUsersPerSec = document.getElementById("constantUsersPerSec").value;
+		temp1.constantUsersPerSecDuring = document.getElementById("constantUsersPerSecDuring").value;
+		temp1.rampUsersPerSecRate1 = document.getElementById("rampUsersPerSecRate1").value;
+		temp1.rampUsersPerSecRate2 = document.getElementById("rampUsersPerSecRate2").value;
+		temp1.rampUsersPerSecDuring = document.getElementById("rampUsersPerSecDuring").value;
 		temp1.fileContent = fileContent;
 			
 		x.url = "/runPerfMotor";
@@ -8343,9 +8351,17 @@
           var n = v.apply(this, [t]),
               o = (0, i.default)({}, n),
 			  temp2 = (0, i.default)({}, n);
-			
-			temp2.nbrOfReq = document.getElementById("nbrOfReq").value;
-			temp2.nbrOfLoops = document.getElementById("nbrOfLoops").value;
+			  
+			temp2.expectedMaxResponseTime = document.getElementById("expectedMaxResponseTime").value;
+			temp2.expectedStatus = document.getElementById("expectedStatus").value;
+			temp2.atOnceUsers = document.getElementById("atOnceUsers").value;
+			temp2.rampUsers = document.getElementById("rampUsers").value;
+			temp2.rampUsersOver = document.getElementById("rampUsersOver").value;
+			temp2.constantUsersPerSec = document.getElementById("constantUsersPerSec").value;
+			temp2.constantUsersPerSecDuring = document.getElementById("constantUsersPerSecDuring").value;
+			temp2.rampUsersPerSecRate1 = document.getElementById("rampUsersPerSecRate1").value;
+			temp2.rampUsersPerSecRate2 = document.getElementById("rampUsersPerSecRate2").value;
+			temp2.rampUsersPerSecDuring = document.getElementById("rampUsersPerSecDuring").value;
 			temp2.fileContent = fileContent;
 			
 			o.url = "/runPerfMotor";
@@ -8367,7 +8383,7 @@
 		  window.location = t.body;
           t.duration = Date.now() - S, r.setResponse(e.pathName, e.method, t)
         }).catch(function(t) {
-			//alert(JSON.stringify(t));
+		  alert(JSON.stringify(t));
           return r.setResponse(e.pathName, e.method, {
             error: !0,
             err: (0, h.default)(t)

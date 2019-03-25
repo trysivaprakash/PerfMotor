@@ -35,11 +35,11 @@ public class PerfMotorRouter {
     private final String simulationClass = "perfmotor.gatling.PerfMotorSimulation";
 
     /**
-     * Sample method to test
+     * Sample method to body
      *
      * @return
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/cars")
+    @RequestMapping(method = RequestMethod.GET, path = "/perfMotor/cars")
     public String justAGet() {
         System.out.println("Mustang, Fusion, GT ... etc");
         return "Mustang, Fusion, GT ... etc";
@@ -88,24 +88,49 @@ public class PerfMotorRouter {
             LOGGER.error("Exception while decoding given url", e);
             throw new PerfMotorException("Exception while decoding given url", e);
         }
-        PerfMotorEnvHolder.httpMethod_$eq(testingDetails.getMethod());
-        PerfMotorEnvHolder.loopCount_$eq(testingDetails.getNbrOfLoops());
-        PerfMotorEnvHolder.rampUp_$eq(testingDetails.getNbrOfReq());
-        PerfMotorEnvHolder.test_$eq(testingDetails.getBody());
-
-        if (null != testingDetails.getFileContent()
-                && !testingDetails.getFileContent().equalsIgnoreCase("false")) {
-            PerfMotorEnvHolder.dataDirectory_$eq(writeDataToFile(testingDetails.getFileContent()));
-        } else {
-            PerfMotorEnvHolder.dataDirectory_$eq("");
-        }
-        PerfMotorEnvHolder.maxRespTime_$eq(500);
         PerfMotorEnvHolder.requestName_$eq("For given request");
         PerfMotorEnvHolder.scenarioName_$eq("For given scenario");
         if (null != testingDetails.getHeaders().getAuthorization()) {
             PerfMotorEnvHolder.token_$eq(testingDetails.getHeaders().getAuthorization());
         } else {
             PerfMotorEnvHolder.token_$eq("");
+        }
+        PerfMotorEnvHolder.httpMethod_$eq(testingDetails.getMethod());
+        PerfMotorEnvHolder.body_$eq(testingDetails.getBody());
+
+        PerfMotorEnvHolder.expectedMaxResponseTime_$eq(testingDetails.getExpectedMaxResponseTime());
+        PerfMotorEnvHolder.expectedStatus_$eq(testingDetails.getExpectedStatus());
+
+        PerfMotorEnvHolder.atOnceUsers_$eq(testingDetails.getAtOnceUsers());
+        PerfMotorEnvHolder.rampUsers_$eq(testingDetails.getRampUsers());
+        if (null != testingDetails.getRampUsersOver()) {
+            PerfMotorEnvHolder.rampUsersOver_$eq(testingDetails.getRampUsersOver());
+        }
+         else {
+            PerfMotorEnvHolder.rampUsersOver_$eq("0 seconds");
+        }
+
+        PerfMotorEnvHolder.constantUsersPerSec_$eq(testingDetails.getConstantUsersPerSec());
+
+         if (null != testingDetails.getConstantUsersPerSecDuring()) {
+             PerfMotorEnvHolder.constantUsersPerSecDuring_$eq(testingDetails.getConstantUsersPerSecDuring());
+         } else {
+             PerfMotorEnvHolder.constantUsersPerSecDuring_$eq("0 seconds");
+         }
+
+        PerfMotorEnvHolder.rampUsersPerSecRate1_$eq(testingDetails.getRampUsersPerSecRate1());
+        PerfMotorEnvHolder.rampUsersPerSecRate2_$eq(testingDetails.getRampUsersPerSecRate2());
+        if (null != testingDetails.getRampUsersPerSecDuring()) {
+            PerfMotorEnvHolder.rampUsersPerSecDuring_$eq(testingDetails.getRampUsersPerSecDuring());
+        } else {
+            PerfMotorEnvHolder.rampUsersPerSecDuring_$eq("0 seconds");
+        }
+
+        if (null != testingDetails.getFileContent()
+                && !testingDetails.getFileContent().equalsIgnoreCase("false")) {
+            PerfMotorEnvHolder.dataDirectory_$eq(writeDataToFile(testingDetails.getFileContent()));
+        } else {
+            PerfMotorEnvHolder.dataDirectory_$eq("");
         }
     }
 
