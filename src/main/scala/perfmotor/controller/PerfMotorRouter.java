@@ -17,13 +17,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import perfmotor.beans.TestingDetails;
 import perfmotor.gatling.PerfMotorEnvHolder;
 import perfmotor.util.PerfMotorException;
 import springfox.documentation.annotations.ApiIgnore;
 
-@ApiIgnore
+//@ApiIgnore
 @RestController
 public class PerfMotorRouter {
 
@@ -36,8 +37,9 @@ public class PerfMotorRouter {
   /**
    * Sample method to body
    */
-  @ApiIgnore
+//  @ApiIgnore
   @RequestMapping(method = RequestMethod.GET, path = "/perfMotor/cars")
+  @ResponseBody
   public String justAGet() {
     System.out.println("Mustang, Fusion, GT ... etc");
     return "Mustang, Fusion, GT ... etc";
@@ -69,15 +71,29 @@ public class PerfMotorRouter {
    * @return String - Generated report path.
    */
   private String getPerfTestReportPath() throws PerfMotorException {
+    String combinedHtml = null;
     String reportHtml;
-    File file = new File(reportPath);
-    String[] listOfSubfolders = file.list();
-    //String reportHtml =  "resources/" + listOfSubfolders[0] + "/index.html";
     FileReader fileReader = null;
+    File file;
     try {
+      file = new File(reportPath);
+      String[] listOfSubfolders = file.list();
       fileReader = new FileReader(reportPath + "/" + listOfSubfolders[0] + "/index.html");
       reportHtml = IOUtils.toString(fileReader);
       reportHtml = reportHtml.startsWith("\n") ? reportHtml.substring(1) : reportHtml;
+
+      StringBuilder sb = new StringBuilder("<script type=\"text/javascript\">");
+      String jsDir = reportPath + "/" + listOfSubfolders[0] + "/js";
+      file = new File(jsDir);
+      String[] listOfJs = file.list();
+      for (String jsFile : listOfJs) {
+        fileReader = new FileReader(jsDir + "/" + jsFile);
+        sb.append(IOUtils.toString(fileReader));
+      }
+      sb.append("</script>");
+      String regEx = "<script type=\"text/javascript\" src=\"js/\\w+\\W*\\w+\\.js\"></script>";
+      combinedHtml = reportHtml.replaceAll(regEx, sb.toString());
+
     } catch (FileNotFoundException e) {
       LOGGER.error("Exception while reading report html", e);
       throw new PerfMotorException("Exception while reading report html", e);
@@ -94,7 +110,7 @@ public class PerfMotorRouter {
         }
       }
     }
-    return reportHtml;
+    return combinedHtml;
   }
 
   /**

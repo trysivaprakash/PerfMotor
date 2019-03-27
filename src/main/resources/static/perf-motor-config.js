@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
       + '<tr><td><div class="opblock-summary">'
       + '<span class="opblock-summary-method" title = "Injects a given number of users at once">Users at once</span>'
       + '</div></td>'
-      + '<td><input type="text" id="atOnceUsers" value="0"/></td></tr>'
+      + '<td><input type="text" id="atOnceUsers" value="10"/></td></tr>'
 
       + '<tr><td><div class="opblock-summary">'
       + '<span class="opblock-summary-method" title = "Injects a given number of users with a linear ramp over a given duration">Ramp Users</span>'
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
       + '<tr><td><div class="opblock-summary">'
       + '<span class="opblock-summary-method" title = "Injects users at a constant rate, defined in users per second, during a given duration. Users will be injected at regular intervals">Constant Users Per Second</span>'
       + '</div></td>'
-      + '<td><input type="text" id="constantUsersPerSec" value="20"/> during</td><td><input type="text" id="constantUsersPerSecDuring" value="10 seconds"/></td></tr>'
+      + '<td><input type="text" id="constantUsersPerSec" value="0"/> during</td><td><input type="text" id="constantUsersPerSecDuring" value="0 seconds"/></td></tr>'
 
       + '<tr><td><div class="opblock-summary">'
       + '<span class="opblock-summary-method" title = " Injects users from starting rate to target rate, defined in users per second, during a given duration. Users will be injected at regular intervals">Ramp Users Per Second</span>'
