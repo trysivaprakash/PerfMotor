@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import perfmotor.beans.TestingDetails;
 import perfmotor.gatling.PerfMotorEnvHolder;
@@ -21,10 +22,12 @@ import java.nio.charset.StandardCharsets;
 public class PerfMotorRouter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PerfMotorRouter.class);
-
     private final String reportPath = System.getProperty("user.dir") + "/src/main/webapp/resources";
     private final String dataDirectory = System.getProperty("user.dir") + "/src/main/webapp/data";
     private final String simulationClass = "perfmotor.gatling.PerfMotorSimulation";
+
+    @Value("${perfMotor.enable}")
+    private boolean perfMotorEnabled;
 
     /**
      * Sample method
@@ -39,13 +42,17 @@ public class PerfMotorRouter {
     @RequestMapping(value = "/runPerfMotor", method = RequestMethod.POST)
     public synchronized void runPerformanceTest(@RequestBody TestingDetails testingDetails)
             throws PerfMotorException {
+
         LOGGER.info("Requested Http Method: " + testingDetails.getMethod());
         LOGGER.info("Requested Http URL : " + testingDetails.getUrl());
-
-        preActions();
-        convertDetailsForScala(testingDetails);
-        executeRun();
-        //return getPerfTestReportPath();
+        if (perfMotorEnabled) {
+            LOGGER.info("PERF MOTOR enabled and gonna execute!");
+            preActions();
+            convertDetailsForScala(testingDetails);
+            executeRun();
+        } else {
+            LOGGER.info("PERF MOTOR disabled and not executed!");
+        }
     }
 
     @RequestMapping(value = "/lastPerfMotorGeneratedReport", method = RequestMethod.GET, produces = "text/html")
@@ -109,7 +116,7 @@ public class PerfMotorRouter {
             file = new File(reportPath);
             String[] listOfSubfolders = file.list();
             if (null == listOfSubfolders) {
-                return "<!DOCTYPE html><html><head><title>PERF-MOTOR</title></head><body><h1>Report not available. Please run PERF-MOTOR and check again!</h1></body></html>";
+                return "<!DOCTYPE html><html><head><title>PERF-MOTOR</title></head><body><h1>Report not available. Please check \"perfMotor.enable\" property and run PERF-MOTOR again!</h1></body></html>";
             }
             fileReader = new FileReader(reportPath + "/" + listOfSubfolders[0] + "/index.html");
             reportHtml = IOUtils.toString(fileReader);
