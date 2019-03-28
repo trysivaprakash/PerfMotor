@@ -8380,7 +8380,7 @@
         var S = Date.now();
         return n.execute(e).then(function(t) {
 		  //alert(JSON.stringify(t));
-		  window.location = "/getLastGeneratedReport";
+		  window.location = "/lastPerfMotorGeneratedReport";
           t.duration = Date.now() - S, r.setResponse(e.pathName, e.method, t)
         }).catch(function(t) {
 		  alert(JSON.stringify(t));

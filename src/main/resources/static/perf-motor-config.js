@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
       +'<td valign="bottom"><div class="product-name-styleme">PERF MOTOR</div></td></tr></table>'
       + '</div></div>'
 
+  var lastReportContent = '<div align="right"><a href="/lastPerfMotorGeneratedReport" class="btn">Show last generated report</a></div>';
+
   var confDetails = '<div class="config-styleme">'
       + '<h4 id="myAppHeader" class="opblock-tag">Performance Testing Configurations</h4>'
 	  + '<span><div id="myConfigTableDiv" class="opblock opblock-conf"><table>'
@@ -47,6 +49,6 @@ document.addEventListener('DOMContentLoaded', function() {
       + '<td><input type="file" id="fileinput" onchange="readSingleFile(event)" name="csv feeder file"/></td></tr>'
       + '</table></div></span></div>';
 
-  headSection.innerHTML = htmlContent + confDetails;
+  headSection.innerHTML = htmlContent + lastReportContent + confDetails;
 
 }, false);
