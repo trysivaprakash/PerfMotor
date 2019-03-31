@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: sample-spring-boot
+perfMotor:
+  enable: true
+server:
+  port: 8081

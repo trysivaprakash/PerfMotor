@@ -33,10 +33,6 @@
   <body>
     <div id="perf-motor-ui"></div>
     <div id="swagger-ui"></div>
-
-    <script src="./swagger-ui-bundle.js"> </script>
-    <script src="./swagger-ui-standalone-preset.js"> </script>
-    <script src="./perf-motor-config.js"> </script>
     <script>
       var fileContent = false;
       function readSingleFile(evt) {
@@ -55,10 +51,19 @@
       }
     </script>
     <script>
-    window.onload = function() {
+      window.onload = function() {
+        var swaggerUrl = prompt("Please enter swagger-url:", "");
+        if (swaggerUrl == null || swaggerUrl == "") {
+          alert("Swagger url is mandatory to proceed!")
+          window.stop();
+        }
+        loadPerfMotorPage(swaggerUrl);
+      }
+
+    loadPerfMotorPage = function(swaggerUrl) {
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
-        url: "/v2/api-docs",
+        url: "/getSwaggerDocDetails?swaggerUrl=" + swaggerUrl,
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [
@@ -75,5 +80,8 @@
       window.ui = ui;
     }
   </script>
+    <script src="./swagger-ui-bundle.js"> </script>
+    <script src="./swagger-ui-standalone-preset.js"> </script>
+    <script src="./perf-motor-config.js"> </script>
   </body>
 </html>

@@ -81,12 +81,12 @@ class PerfMotorSimulation extends Simulation {
       .exec(flushHttpCache).exec(flushHttpCache).exec(flushSessionCookies)
   }
 
-  var perfMotorSimulation = List(perfMotorScenario.inject(
+  var perfMotorSimulation = perfMotorScenario.inject(
     atOnceUsers(PerfMotorEnvHolder.atOnceUsers),
     rampUsers(PerfMotorEnvHolder.rampUsers) over Duration.apply(PerfMotorEnvHolder.rampUsersOver).asInstanceOf[FiniteDuration],
     constantUsersPerSec(PerfMotorEnvHolder.constantUsersPerSec) during Duration.apply(PerfMotorEnvHolder.constantUsersPerSecDuring).asInstanceOf[FiniteDuration],
     rampUsersPerSec(PerfMotorEnvHolder.rampUsersPerSecRate1) to (PerfMotorEnvHolder.rampUsersPerSecRate2) during Duration.apply(PerfMotorEnvHolder.rampUsersPerSecDuring).asInstanceOf[FiniteDuration]
-  ))
+  )
 
-  setUp(perfMotorSimulation).protocols(httpConf);
+  setUp(perfMotorSimulation.protocols(httpConf));
 }

@@ -2,22 +2,34 @@ package perfmotor.controller;
 
 import io.gatling.app.Gatling;
 import io.gatling.core.config.GatlingPropertiesBuilder;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import perfmotor.beans.TestingDetails;
 import perfmotor.gatling.PerfMotorEnvHolder;
 import perfmotor.util.PerfMotorException;
-import springfox.documentation.annotations.ApiIgnore;
 
-import java.io.*;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-
-@ApiIgnore
+//@ApiIgnore
 @RestController
 public class PerfMotorRouter {
 
@@ -29,6 +41,9 @@ public class PerfMotorRouter {
     @Value("${perfMotor.enable}")
     private boolean perfMotorEnabled;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
     /**
      * Sample method
      */
@@ -39,15 +54,22 @@ public class PerfMotorRouter {
         return "Mustang, Fusion, GT ... etc";
     }
 
+    @RequestMapping(value = "/getSwaggerDocDetails", method = RequestMethod.GET)
+    public synchronized ResponseEntity<String> getSwaggerDocDetails(@RequestParam("swaggerUrl") String swaggerUrl) throws PerfMotorException {
+        LOGGER.info("To get swagger url");
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(swaggerUrl, String.class);
+        return responseEntity;
+    }
+
     @RequestMapping(value = "/runPerfMotor", method = RequestMethod.POST)
-    public synchronized void runPerformanceTest(@RequestBody TestingDetails testingDetails)
+    public void runPerformanceTest(@RequestBody TestingDetails testingDetails)
             throws PerfMotorException {
 
         LOGGER.info("Requested Http Method: " + testingDetails.getMethod());
         LOGGER.info("Requested Http URL : " + testingDetails.getUrl());
         if (perfMotorEnabled) {
             LOGGER.info("PERF MOTOR enabled and gonna execute!");
-            preActions();
+            //preActions();
             convertDetailsForScala(testingDetails);
             executeRun();
         } else {
@@ -149,6 +171,7 @@ public class PerfMotorRouter {
      */
     private void convertDetailsForScala(@RequestBody TestingDetails testingDetails)
             throws PerfMotorException {
+
         try {
             PerfMotorEnvHolder.baseUrl_$eq(
                     URLDecoder.decode(testingDetails.getUrl(), StandardCharsets.UTF_8.toString()));
@@ -222,6 +245,7 @@ public class PerfMotorRouter {
         props.simulationClass(simulationClass);
         props.resultsDirectory(reportPath);
         props.dataDirectory(dataDirectory);
+        props.outputDirectoryBaseName("mine");
 
         Gatling.fromMap(props.build());
     }
