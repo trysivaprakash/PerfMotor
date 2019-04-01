@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class HeaderDetails {
 
     private String accept;
-    private String Authorization;
+    @JsonProperty("Authorization")
+    private String authorization;
     @JsonProperty("Content-Type")
     private String contentType;
 
@@ -18,11 +19,11 @@ public class HeaderDetails {
     }
 
     public String getAuthorization() {
-        return Authorization;
+        return authorization;
     }
 
     public void setAuthorization(String authorization) {
-        Authorization = authorization;
+        this.authorization = authorization;
     }
 
     public String getContentType() {

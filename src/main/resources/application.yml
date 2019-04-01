@@ -1,7 +1,9 @@
 spring:
   application:
-    name: sample-spring-boot
+    name: PerfMotor
 perfMotor:
   enable: true
 server:
   port: 8081
+logging.level:
+  com.ford.sca.cap: DEBUG

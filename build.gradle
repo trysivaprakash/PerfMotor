@@ -1,25 +1,54 @@
-group = 'com.myorg.perf-motor'
-version = '1.0.0'
-description = """PERF MOTOR"""
+buildscript {
+    ext {
+        springBootVersion = '2.0.6.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://repo.spring.io/plugins-release" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE"
+    }
+}
 
 apply plugin: 'java'
-//apply plugin: 'scala'
-//apply plugin: 'application'
+apply plugin: 'scala'
+apply plugin: 'org.springframework.boot'
+apply plugin: "io.spring.dependency-management"
 
 repositories {
     jcenter()
     mavenCentral()
 }
 
-//mainClassName = 'perfmotor.Launcher'
+dependencyManagement {
+    imports {
+        mavenBom "io.pivotal.spring.cloud:spring-cloud-services-dependencies:2.0.1.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Finchley.RELEASE"
+    }
+}
 
-/*jar {
+group = 'com.ford.sca.cap'
+version = '1.0.0'
+description = """Perf Motor Application"""
+archivesBaseName = 'PerfMotor'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jar {
     from { (configurations.runtime).collect { it.isDirectory() ? it : zipTree(it) } } {
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
-}*/
+}
 
-/*configurations.all {
+bootJar {
+    baseName = 'perfMotor'
+    version = '1.0.0'
+}
+
+configurations.all {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-aop'
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-jdbc'
     exclude group: 'org.springframework', module: 'spring-aspects'
@@ -27,20 +56,27 @@ repositories {
     exclude group: 'org.mapstruct', module: 'mapstruct'
     exclude group: 'javax.activation', module: 'activation'
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-}*/
+}
 
 dependencies {
-    /*compileOnly(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.6.RELEASE')
-    compileOnly(group: 'io.springfox', name: 'springfox-swagger2', version: '2.8.0')
-    compileOnly(group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.8.0')
-    compileOnly(group: 'org.scala-lang', name: 'scala-library', version:'2.12.3')
-    compileOnly(group: 'commons-io', name: 'commons-io', version: '2.6')
-    compileOnly(group: 'io.gatling.highcharts', name: 'gatling-charts-highcharts', version: '2.3.0')*/
-
-    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.6.RELEASE')
+    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web')
+    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web-services')
     compile(group: 'io.springfox', name: 'springfox-swagger2', version: '2.8.0')
     compile(group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.8.0')
     compile(group: 'org.scala-lang', name: 'scala-library', version:'2.12.3')
     compile(group: 'commons-io', name: 'commons-io', version: '2.6')
-    compile(group: 'io.gatling.highcharts', name: 'gatling-charts-highcharts', version: '2.3.0')
+    compile(group: 'io.gatling.highcharts', name: 'gatling-charts-highcharts', version: '2.3.0') {
+        exclude group: 'io.netty', module: 'netty-transport'
+        exclude group: 'io.netty', module: 'netty-handler'
+        exclude group: 'io.netty', module: 'netty-codec'
+        exclude group: 'io.netty', module: 'netty-codec-http'
+        exclude group: 'io.netty', module: 'netty-common'
+        exclude group: 'io.netty', module: 'netty-buffer'
+    }
+    compile(group: 'io.netty', name: 'netty-transport', version: '4.0.51.Final')
+    compile(group: 'io.netty', name: 'netty-handler', version: '4.0.51.Final')
+    compile(group: 'io.netty', name: 'netty-codec', version: '4.0.51.Final')
+    compile(group: 'io.netty', name: 'netty-codec-http', version: '4.0.51.Final')
+    compile(group: 'io.netty', name: 'netty-common', version: '4.0.51.Final')
+    compile(group: 'io.netty', name: 'netty-buffer', version: '4.0.51.Final')
 }

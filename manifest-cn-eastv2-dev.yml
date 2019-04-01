@@ -4,7 +4,6 @@ applications:
   memory: 1G
   path: build/libs/PerfMotor-1.0.0.jar
   instances: 1
-  buildpack: java_buildpack
   env:
     SPRING_PROFILES_ACTIVE: development
     RESOURCE_SERVER_CLIENT_ID: dev_env

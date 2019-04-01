@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,15 +29,16 @@ import org.springframework.web.client.RestTemplate;
 import perfmotor.beans.TestingDetails;
 import perfmotor.gatling.PerfMotorEnvHolder;
 import perfmotor.util.PerfMotorException;
+import springfox.documentation.annotations.ApiIgnore;
 
-//@ApiIgnore
+@ApiIgnore
 @RestController
 public class PerfMotorRouter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PerfMotorRouter.class);
-    private final String reportPath = System.getProperty("user.dir") + "/src/main/webapp/resources";
-    private final String dataDirectory = System.getProperty("user.dir") + "/src/main/webapp/data";
-    private final String simulationClass = "perfmotor.gatling.PerfMotorSimulation";
+    private static final String reportPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "resources";
+    private static final String dataDirectory = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "data";
+    private static final String simulationClass = "perfmotor.gatling.PerfMotorSimulation";
 
     @Value("${perfMotor.enable}")
     private boolean perfMotorEnabled;
@@ -54,22 +56,22 @@ public class PerfMotorRouter {
         return "Mustang, Fusion, GT ... etc";
     }
 
-    @RequestMapping(value = "/getSwaggerDocDetails", method = RequestMethod.GET)
-    public synchronized ResponseEntity<String> getSwaggerDocDetails(@RequestParam("swaggerUrl") String swaggerUrl) throws PerfMotorException {
+    @RequestMapping(value = "/getSwaggerDocDetails", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public synchronized String getSwaggerDocDetails(@RequestParam("swaggerUrl") String swaggerUrl) {
         LOGGER.info("To get swagger url");
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(swaggerUrl, String.class);
-        return responseEntity;
+        return responseEntity.getBody();
     }
 
     @RequestMapping(value = "/runPerfMotor", method = RequestMethod.POST)
-    public void runPerformanceTest(@RequestBody TestingDetails testingDetails)
+    public synchronized void runPerformanceTest(@RequestBody TestingDetails testingDetails)
             throws PerfMotorException {
 
         LOGGER.info("Requested Http Method: " + testingDetails.getMethod());
         LOGGER.info("Requested Http URL : " + testingDetails.getUrl());
         if (perfMotorEnabled) {
             LOGGER.info("PERF MOTOR enabled and gonna execute!");
-            //preActions();
+            preActions();
             convertDetailsForScala(testingDetails);
             executeRun();
         } else {
@@ -219,8 +221,10 @@ public class PerfMotorRouter {
 
         if (null != testingDetails.getFileContent()
                 && !testingDetails.getFileContent().equalsIgnoreCase("false")) {
+            LOGGER.info("File content provided");
             PerfMotorEnvHolder.dataDirectory_$eq(writeDataToFile(testingDetails.getFileContent()));
         } else {
+            LOGGER.info("File content not provided");
             PerfMotorEnvHolder.dataDirectory_$eq("");
         }
     }
@@ -231,6 +235,7 @@ public class PerfMotorRouter {
     private void preActions() throws PerfMotorException {
         try {
             FileUtils.deleteDirectory(new File(reportPath));
+            FileUtils.deleteDirectory(new File(dataDirectory));
         } catch (IOException e) {
             LOGGER.error("Exception while deleting existing report file", e);
             throw new PerfMotorException("Exception while deleting existing report file", e);
@@ -245,7 +250,7 @@ public class PerfMotorRouter {
         props.simulationClass(simulationClass);
         props.resultsDirectory(reportPath);
         props.dataDirectory(dataDirectory);
-        props.outputDirectoryBaseName("mine");
+        props.outputDirectoryBaseName("PerfMotorSimulation");
 
         Gatling.fromMap(props.build());
     }
@@ -257,9 +262,21 @@ public class PerfMotorRouter {
      * @return String - Path where file content written in file.
      */
     private String writeDataToFile(String feederData) throws PerfMotorException {
-        String fileAbsPath = dataDirectory + "/dataNew.csv";
         FileWriter writer = null;
+        String fileAbsPath = dataDirectory + File.separator + "dataNew.csv";
+        LOGGER.info("Writing file content in path - " + fileAbsPath);
         try {
+            File dataDirFile = new File(dataDirectory);
+            if (!dataDirFile.exists()) {
+                LOGGER.info("Data directory not exists. Creating - " + dataDirectory);
+                boolean isDataDirFileCreated = dataDirFile.mkdirs();
+                LOGGER.info("isDataDirFileCreated - " + isDataDirFileCreated);
+            }
+            File file = new File(fileAbsPath);
+            if (!file.exists()) {
+                LOGGER.info("File does not exists. Creating - " + fileAbsPath);
+                file.createNewFile();
+            }
             writer = new FileWriter(fileAbsPath, false);
             writer.append(feederData);
         } catch (IOException e) {
