@@ -189,7 +189,12 @@ public class PerfMotorRouter {
             PerfMotorEnvHolder.token_$eq("");
         }
         PerfMotorEnvHolder.httpMethod_$eq(testingDetails.getMethod());
-        PerfMotorEnvHolder.body_$eq(testingDetails.getBody());
+        if (null != testingDetails.getBody()) {
+            PerfMotorEnvHolder.body_$eq(testingDetails.getBody());
+        } else {
+            PerfMotorEnvHolder.body_$eq("");
+        }
+
 
         PerfMotorEnvHolder.expectedMaxResponseTime_$eq(testingDetails.getExpectedMaxResponseTime());
         PerfMotorEnvHolder.expectedStatus_$eq(testingDetails.getExpectedStatus());
@@ -263,7 +268,7 @@ public class PerfMotorRouter {
      */
     private String writeDataToFile(String feederData) throws PerfMotorException {
         FileWriter writer = null;
-        String fileAbsPath = dataDirectory + File.separator + "dataNew.csv";
+        String fileAbsPath = dataDirectory + File.separator + "data-" + Math.random() * 100 + ".csv";
         LOGGER.info("Writing file content in path - " + fileAbsPath);
         try {
             File dataDirFile = new File(dataDirectory);
