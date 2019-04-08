@@ -71,7 +71,7 @@ public class PerfMotorRouter {
         LOGGER.info("Requested Http URL : " + testingDetails.getUrl());
         if (perfMotorEnabled) {
             LOGGER.info("PERF MOTOR enabled and gonna execute!");
-            preActions();
+            //preActions();
             convertDetailsForScala(testingDetails);
             executeRun();
         } else {
@@ -254,8 +254,8 @@ public class PerfMotorRouter {
         GatlingPropertiesBuilder props = new GatlingPropertiesBuilder();
         props.simulationClass(simulationClass);
         props.resultsDirectory(reportPath);
-        props.dataDirectory(dataDirectory);
-        props.outputDirectoryBaseName("PerfMotorSimulation");
+//        props.dataDirectory(dataDirectory);
+//        props.outputDirectoryBaseName("PerfMotorSimulation");
 
         Gatling.fromMap(props.build());
     }

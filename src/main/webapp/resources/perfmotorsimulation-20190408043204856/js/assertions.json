@@ -1,0 +1,10 @@
+{
+  "simulation": "perfmotor.gatling.PerfMotorSimulation",
+  "simulationId": "perfmotorsimulation",
+  "start": 1554697924856,
+  "description": "",
+  "scenarios": ["For given scenario"],
+  "assertions": [
+
+  ]
+}
